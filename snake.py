@@ -110,12 +110,11 @@ def main():
     food = Food()
 
     # Game loop
-    while True:
+    running = True
+    while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                pygame.quit()
-                quit()
-
+                running = False
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_LEFT:
                     snake.change_direction_to("LEFT")
@@ -133,21 +132,10 @@ def main():
 
         # Check for collisions
         if snake.check_collision():
-            break
+            running = False
 
         # Draw everything
         screen.fill(BLACK)
         for pos in snake.get_body():
             pygame.draw.rect(screen, GREEN, pygame.Rect(pos[0], pos[1], GRID_SIZE, GRID_SIZE))
-        pygame.draw.rect(screen, RED, pygame.Rect(food_pos[0], food_pos[1], GRID_SIZE, GRID_SIZE))
-
-        pygame.display.flip()
-
-        # Control the game's speed
-        clock.tick(10)
-
-    pygame.quit()
-
-
-if __name__ == "__main__":
-    main()
+        pygame.draw.rect(screen, RED, pygame.Rect(food_pos[0], food_pos[1
