@@ -1,3 +1,6 @@
+import os
+os.environ["SDL_VIDEODRIVER"] = "dummy"
+
 import pygame
 import time
 import random
@@ -20,7 +23,6 @@ GRID_SIZE = 20
 
 # Initialize the screen
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Snake Game")
 
 # Set the clock for controlling the frame rate
 clock = pygame.time.Clock()
