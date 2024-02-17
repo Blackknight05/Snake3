@@ -1,7 +1,8 @@
 version: 1.0
-runtime: python311
+runtime: python3
 build:
   commands:
-    - pip3 install -r requirements.txt
+    build:
+      - pip3 install -r requirements.txt
 run:
   command: python snake.py
