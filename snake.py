@@ -43,7 +43,7 @@ def display_score(score):
 
 # Main game function
 def main():
-    global change_to, snake_direction
+    global change_to, snake_direction, food_pos
 
     game_over = False
     while not game_over:
