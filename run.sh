@@ -1,15 +1,11 @@
 #!/bin/bash
 
 # Install necessary packages
-sudo apt-get update
-sudo apt-get install -y python3-pip xvfb
+yum update -y
+yum install -y python3
 
 # Install Python dependencies
-pip3 install -r requirements.txt
-
-# Set up virtual display with Xvfb
-export SDL_VIDEODRIVER=x11
-export DISPLAY=:0
+pip3 install --user -r requirements.txt
 
 # Run the Python script
 python3 snake.py
