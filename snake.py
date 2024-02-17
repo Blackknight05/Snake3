@@ -1,72 +1,151 @@
-import curses
-from random import randint
+import pygame
+import time
+import random
+
+# Initialize Pygame
+pygame.init()
+
+# Define colors
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+RED = (255, 0, 0)
+GREEN = (0, 255, 0)
+BLUE = (0, 0, 255)
+
+# Set the width and height of the screen (in pixels)
+WIDTH, HEIGHT = 600, 400
+
+# Set the size of each grid cell
+GRID_SIZE = 20
 
 # Initialize the screen
-screen = curses.initscr()
-curses.curs_set(0)
-screen_height, screen_width = screen.getmaxyx()
-window = curses.newwin(screen_height, screen_width, 0, 0)
-window.keypad(1)
-window.timeout(100)
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Snake Game")
 
-# Initial snake position and food
-snake_x = screen_width // 4
-snake_y = screen_height // 2
-snake = [[snake_y, snake_x], [snake_y, snake_x - 1], [snake_y, snake_x - 2]]
-food = [screen_height // 2, screen_width // 2]
-window.addch(food[0], food[1], curses.ACS_PI)
+# Set the clock for controlling the frame rate
+clock = pygame.time.Clock()
 
-# Initialize game variables
-score = 0
-key = curses.KEY_RIGHT
+# Define the Snake class
+class Snake:
+    def __init__(self):
+        self.body = [(WIDTH / 2, HEIGHT / 2)]
+        self.direction = "RIGHT"
+        self.change_to = self.direction
 
-# Game logic
-while True:
-    next_key = window.getch()
-    key = key if next_key == -1 else next_key
+    def change_direction_to(self, dir):
+        if dir == "RIGHT" and self.direction != "LEFT":
+            self.direction = "RIGHT"
+        if dir == "LEFT" and self.direction != "RIGHT":
+            self.direction = "LEFT"
+        if dir == "UP" and self.direction != "DOWN":
+            self.direction = "UP"
+        if dir == "DOWN" and self.direction != "UP":
+            self.direction = "DOWN"
 
-    # Check if snake hits the wall or itself
-    if (snake[0][0] in [0, screen_height] or
-            snake[0][1] in [0, screen_width] or
-            snake[0] in snake[1:]):
-        curses.endwin()
-        quit()
+    def move(self, food_pos):
+        if self.direction == "RIGHT":
+            new_head = (self.body[0][0] + GRID_SIZE, self.body[0][1])
+        if self.direction == "LEFT":
+            new_head = (self.body[0][0] - GRID_SIZE, self.body[0][1])
+        if self.direction == "UP":
+            new_head = (self.body[0][0], self.body[0][1] - GRID_SIZE)
+        if self.direction == "DOWN":
+            new_head = (self.body[0][0], self.body[0][1] + GRID_SIZE)
 
-    # Calculate new head position
-    new_head = [snake[0][0], snake[0][1]]
+        self.body.insert(0, new_head)
 
-    # Update snake direction based on input
-    if key == curses.KEY_DOWN:
-        new_head[0] += 1
-    if key == curses.KEY_UP:
-        new_head[0] -= 1
-    if key == curses.KEY_LEFT:
-        new_head[1] -= 1
-    if key == curses.KEY_RIGHT:
-        new_head[1] += 1
+        if self.body[0] == food_pos:
+            return True
+        else:
+            self.body.pop()
+            return False
 
-    # Insert new head
-    snake.insert(0, new_head)
+    def check_collision(self):
+        if (
+            self.body[0][0] >= WIDTH
+            or self.body[0][0] < 0
+            or self.body[0][1] >= HEIGHT
+            or self.body[0][1] < 0
+        ):
+            return True
+        for block in self.body[1:]:
+            if self.body[0] == block:
+                return True
+        return False
 
-    # Check if snake eats food
-    if snake[0] == food:
-        score += 1
-        food = None
-        while food is None:
-            nf = [randint(1, screen_height - 1), randint(1, screen_width - 1)]
-            food = nf if nf not in snake else None
-        window.addch(food[0], food[1], curses.ACS_PI)
-    else:
-        tail = snake.pop()
-        window.addch(tail[0], tail[1], ' ')
+    def get_head_position(self):
+        return self.body[0]
 
-    # Add new head
-    window.addch(snake[0][0], snake[0][1], curses.ACS_CKBOARD)
+    def get_body(self):
+        return self.body
 
-    # Display score
-    window.addstr(0, 2, 'Score: ' + str(score) + ' ')
 
-    # Refresh screen
-    window.refresh()
+# Define the Food class
+class Food:
+    def __init__(self):
+        self.position = (
+            random.randrange(0, WIDTH - GRID_SIZE, GRID_SIZE),
+            random.randrange(0, HEIGHT - GRID_SIZE, GRID_SIZE),
+        )
+        self.is_food_on_screen = True
 
-curses.endwin()
+    def spawn_food(self):
+        if not self.is_food_on_screen:
+            self.position = (
+                random.randrange(0, WIDTH - GRID_SIZE, GRID_SIZE),
+                random.randrange(0, HEIGHT - GRID_SIZE, GRID_SIZE),
+            )
+            self.is_food_on_screen = True
+        return self.position
+
+    def set_food_on_screen(self, boolean):
+        self.is_food_on_screen = boolean
+
+
+# Main function to run the game
+def main():
+    snake = Snake()
+    food = Food()
+
+    # Game loop
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                quit()
+
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_LEFT:
+                    snake.change_direction_to("LEFT")
+                if event.key == pygame.K_RIGHT:
+                    snake.change_direction_to("RIGHT")
+                if event.key == pygame.K_UP:
+                    snake.change_direction_to("UP")
+                if event.key == pygame.K_DOWN:
+                    snake.change_direction_to("DOWN")
+
+        # Move the snake
+        food_pos = food.spawn_food()
+        if snake.move(food_pos):
+            food.set_food_on_screen(False)
+
+        # Check for collisions
+        if snake.check_collision():
+            break
+
+        # Draw everything
+        screen.fill(BLACK)
+        for pos in snake.get_body():
+            pygame.draw.rect(screen, GREEN, pygame.Rect(pos[0], pos[1], GRID_SIZE, GRID_SIZE))
+        pygame.draw.rect(screen, RED, pygame.Rect(food_pos[0], food_pos[1], GRID_SIZE, GRID_SIZE))
+
+        pygame.display.flip()
+
+        # Control the game's speed
+        clock.tick(10)
+
+    pygame.quit()
+
+
+if __name__ == "__main__":
+    main()
